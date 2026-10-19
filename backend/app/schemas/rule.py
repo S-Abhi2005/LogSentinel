@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 class RuleCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=150)
@@ -26,6 +26,8 @@ class RuleUpdate(BaseModel):
     is_enabled: Optional[bool] = None
 
 class RuleResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     name: str
     description: Optional[str]
@@ -41,6 +43,3 @@ class RuleResponse(BaseModel):
     created_by_id: Optional[str]
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True

@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple, Dict, Any
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, asc, and_
+from sqlalchemy import desc, asc, and_, or_
 
 from app.models.log import LogEntry, LogSeverity
 from app.models.service import Service
@@ -169,7 +169,15 @@ def query_logs(
     if trace_id:
         query = query.filter(LogEntry.trace_id == trace_id)
     if search:
-        query = query.filter(LogEntry.message.ilike(f"%{search}%"))
+        search_pattern = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                LogEntry.message.ilike(search_pattern),
+                LogEntry.service_name.ilike(search_pattern),
+                LogEntry.trace_id.ilike(search_pattern),
+                LogEntry.source.ilike(search_pattern)
+            )
+        )
     if start_time:
         query = query.filter(LogEntry.timestamp >= start_time)
     if end_time:
@@ -190,8 +198,11 @@ def query_logs(
 def export_logs_csv(
     db: Session,
     service_id: Optional[str] = None,
+    service_name: Optional[str] = None,
     environment: Optional[str] = None,
     severity: Optional[str] = None,
+    source: Optional[str] = None,
+    trace_id: Optional[str] = None,
     search: Optional[str] = None,
     start_time: Optional[datetime] = None,
     end_time: Optional[datetime] = None,
@@ -201,8 +212,11 @@ def export_logs_csv(
     items, _ = query_logs(
         db=db,
         service_id=service_id,
+        service_name=service_name,
         environment=environment,
         severity=severity,
+        source=source,
+        trace_id=trace_id,
         search=search,
         start_time=start_time,
         end_time=end_time,

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, CheckCheck, RefreshCw, ArrowRight, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Bell, CheckCheck, RefreshCw, ArrowRight } from 'lucide-react';
 import { api } from '../api/client';
 import { AlertItem } from '../types';
 import { SeverityBadge } from '../components/common/SeverityBadge';
@@ -14,7 +14,7 @@ export const AlertsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [filterRead, setFilterRead] = useState<string>('');
 
-  const fetchAlerts = async () => {
+  const fetchAlerts = useCallback(async () => {
     setLoading(true);
     try {
       let endpoint = '/alerts?limit=100';
@@ -25,15 +25,15 @@ export const AlertsPage: React.FC = () => {
       setAlerts(data.items);
       setUnreadCount(data.unread_count);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to fetch alerts:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterRead]);
 
   useEffect(() => {
     fetchAlerts();
-  }, [filterRead]);
+  }, [fetchAlerts]);
 
   const handleMarkRead = async (alertId: string) => {
     try {
@@ -42,7 +42,9 @@ export const AlertsPage: React.FC = () => {
         prev.map((a) => (a.id === alertId ? { ...a, is_read: true } : a))
       );
       setUnreadCount((c) => Math.max(0, c - 1));
-    } catch (_) {}
+    } catch (err) {
+      console.error('Failed to mark alert as read:', err);
+    }
   };
 
   const handleMarkAllRead = async () => {
@@ -50,7 +52,9 @@ export const AlertsPage: React.FC = () => {
       await api.post('/alerts/read-all');
       setAlerts((prev) => prev.map((a) => ({ ...a, is_read: true })));
       setUnreadCount(0);
-    } catch (_) {}
+    } catch (err) {
+      console.error('Failed to mark all alerts as read:', err);
+    }
   };
 
   return (

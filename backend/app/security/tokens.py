@@ -29,3 +29,14 @@ def decode_access_token(token: str) -> Dict[str, Any]:
         raise UnauthorizedException("Access token has expired")
     except jwt.InvalidTokenError:
         raise UnauthorizedException("Invalid access token")
+
+# In-memory revocation set for active tokens
+REVOKED_TOKENS: set[str] = set()
+
+def revoke_token(token: str) -> None:
+    """Marks an access token as revoked."""
+    REVOKED_TOKENS.add(token.strip())
+
+def is_token_revoked(token: str) -> bool:
+    """Checks whether an access token has been revoked."""
+    return token.strip() in REVOKED_TOKENS

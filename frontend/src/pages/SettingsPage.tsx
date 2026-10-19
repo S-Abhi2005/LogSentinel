@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  User as UserIcon,
   Lock,
   Users,
-  Shield,
   CheckCircle2,
   AlertCircle,
   Plus,
@@ -36,21 +34,22 @@ export const SettingsPage: React.FC = () => {
   const [newUserPassword, setNewUserPassword] = useState('');
   const [addUserError, setAddUserError] = useState<string | null>(null);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     if (!isAdmin) return;
     setLoadingUsers(true);
     try {
       const data = await api.get<User[]>('/auth/users');
       setUsersList(data);
-    } catch (_) {}
-    finally {
+    } catch (err) {
+      console.error('Failed to load users in settings:', err);
+    } finally {
       setLoadingUsers(false);
     }
-  };
+  }, [isAdmin]);
 
   useEffect(() => {
     fetchUsers();
-  }, [isAdmin]);
+  }, [fetchUsers]);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();

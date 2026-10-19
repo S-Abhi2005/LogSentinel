@@ -6,7 +6,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6.svg?logo=typescript)](https://www.typescriptlang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%2F18-336791.svg?logo=postgresql)](https://www.postgresql.org)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker)](https://docker.com)
-[![Tests](https://img.shields.io/badge/Tests-19%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-33%20Passed-brightgreen.svg)]()
 
 > A production-grade, full-stack cloud observability and automated incident detection platform engineered to ingest, index, and analyze distributed application telemetry, evaluate real-time incident detection rules, prevent alert fatigue through deterministic fingerprint deduplication, and coordinate end-to-end incident response.
 
@@ -49,6 +49,9 @@ Modern cloud organizations run dozens of distributed microservices emitting thou
 - **Security & RBAC**:
   - JWT token sessions, bcrypt password hashing, and role-based permissions (`Super Admin`, `Engineer`, `Viewer`).
   - Immutable security audit logs recording administrative and access events.
+- **In-App Alerts & Notification Extension**:
+  - Real-time in-app alert queue with unread badges, read/unread filtering, and instant navigation to incident details.
+  - *External Notifications Note*: External delivery channels (Email, Slack webhooks, SMS) are deliberately unconfigured by default to prevent mock delivery assumptions without external service accounts; in-app alerts are active and tested.
 
 ---
 
@@ -123,19 +126,24 @@ python scripts/seed_data.py
 ### Step 3: Run Backend Server
 ```powershell
 # Inside backend directory:
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8001
 ```
-- Interactive Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
-- Liveness Probe: [http://localhost:8000/health/live](http://localhost:8000/health/live)
-- Database Readiness Probe: [http://localhost:8000/health/ready](http://localhost:8000/health/ready)
+- Interactive Swagger UI: [http://localhost:8001/docs](http://localhost:8001/docs)
+- Liveness Probe: [http://localhost:8001/health/live](http://localhost:8001/health/live)
+- Database Readiness Probe: [http://localhost:8001/health/ready](http://localhost:8001/health/ready)
+*(Note: Port 8001 is set by default in `frontend/.env` to prevent port collisions with other local projects on port 8000).*
+
 
 ### Step 4: Run Frontend Development Server
 In a new terminal window:
 ```powershell
 cd frontend
-npm run dev
+npm.cmd run dev
+# (or 'npm run dev' if PowerShell ExecutionPolicy is configured)
 ```
-Open browser at **[http://localhost:5173](http://localhost:5173)**.
+Open browser at **[http://localhost:5174](http://localhost:5174)** *(or http://127.0.0.1:5174)*.
+
+
 
 ### Step 5: Demo Login Credentials (1-Click Buttons Available on Login Screen):
 - **Super Admin**: `admin@logsentinel.local` / `AdminSecurePass123!`

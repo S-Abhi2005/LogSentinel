@@ -1,7 +1,7 @@
-import os
-from typing import List, Union
-from pydantic import AnyHttpUrl, field_validator
+from typing import List, Union, Optional
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 
 class Settings(BaseSettings):
@@ -23,26 +23,44 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
 
     # Database
-    DATABASE_URL: str = "postgresql+psycopg2://postgres:abhi%40321@localhost:5432/logsentinel"
+    DATABASE_URL: Optional[str] = None
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "logsentinel"
     POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "abhi@321"
+    POSTGRES_PASSWORD: Optional[str] = None
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
-    def assemble_db_url(cls, v: str) -> str:
+    def assemble_db_url(cls, v: Optional[str]) -> Optional[str]:
         if v and v.startswith("postgresql://"):
             return v.replace("postgresql://", "postgresql+psycopg2://", 1)
         return v
 
+    @model_validator(mode="after")
+    def validate_database_configuration(self) -> "Settings":
+        if not self.DATABASE_URL:
+            if not self.POSTGRES_PASSWORD:
+                raise ValueError(
+                    "Database credentials missing: Please provide DATABASE_URL or POSTGRES_PASSWORD in your environment or .env file."
+                )
+            from urllib.parse import quote_plus
+            self.DATABASE_URL = (
+                f"postgresql+psycopg2://{self.POSTGRES_USER}:{quote_plus(self.POSTGRES_PASSWORD)}"
+                f"@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            )
+        return self
+
+
     # CORS
     BACKEND_CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
+        "http://localhost:5174",
         "http://localhost:3000",
         "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
     ]
+
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod

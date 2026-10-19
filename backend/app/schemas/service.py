@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 class ServiceCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=100)
@@ -25,6 +25,8 @@ class IngestionKeyCreatedResponse(BaseModel):
     created_at: datetime
 
 class IngestionKeyResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     service_id: str
     key_name: str
@@ -33,10 +35,9 @@ class IngestionKeyResponse(BaseModel):
     created_at: datetime
     last_used_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
-
 class ServiceResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     name: str
     description: Optional[str]
@@ -46,9 +47,6 @@ class ServiceResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     last_log_at: Optional[datetime]
-
-    class Config:
-        from_attributes = True
 
 class ServiceWithStatsResponse(ServiceResponse):
     health_status: str  # HEALTHY, DEGRADED, CRITICAL, UNKNOWN

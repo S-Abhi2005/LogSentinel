@@ -72,17 +72,19 @@ python scripts/seed_data.py
 ### 2. Start Backend Server:
 ```powershell
 # In backend directory:
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8001
 ```
-Backend API interactive Swagger UI: `http://localhost:8000/docs`
+Backend API interactive Swagger UI: `http://localhost:8001/docs`
 
 ### 3. Start Frontend Development Server:
 ```powershell
 # In frontend directory:
 npm run dev
 ```
-Open browser: `http://localhost:5173`
-All `/api` requests are automatically proxied to `http://localhost:8000`.
+Open browser: `http://localhost:5174`
+
+All `/api` requests are automatically proxied to `http://localhost:8001` (configured via `frontend/.env` / `vite.config.ts`).
+
 
 ---
 

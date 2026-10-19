@@ -77,11 +77,12 @@ class IncidentDetectionEngine:
 
         return results
 
-    def check_service_inactivity(self, db: Session) -> List[Incident]:
+    def check_service_inactivity(self, db: Session, reference_time: Optional[datetime] = None) -> List[Incident]:
         """
         Scans all active services and evaluates enabled service_inactivity rules.
+        Allows custom reference_time for deterministic testing.
         """
-        now = datetime.now(timezone.utc)
+        now = reference_time or datetime.now(timezone.utc)
         inactivity_rules = db.query(IncidentRule).filter(
             IncidentRule.is_enabled == True,
             IncidentRule.rule_type == RuleType.SERVICE_INACTIVITY
@@ -103,6 +104,9 @@ class IncidentDetectionEngine:
                     inc, _ = res
                     if inc not in triggered:
                         triggered.append(inc)
+
+        if triggered:
+            db.commit()
 
         return triggered
 

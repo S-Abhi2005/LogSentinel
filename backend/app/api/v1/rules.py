@@ -116,7 +116,7 @@ def update_rule(
         action="RULE_UPDATED",
         target_type="incident_rule",
         target_id=rule.id,
-        details=data.dict(exclude_unset=True)
+        details=data.model_dump(exclude_unset=True)
     )
     db.commit()
     db.refresh(rule)

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Radio, ShieldAlert, LogIn, Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react';
+import { Radio, LogIn, Lock, Mail, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const LoginPage: React.FC = () => {

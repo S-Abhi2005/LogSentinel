@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FileText, Search, RefreshCw, Shield, Clock } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, RefreshCw, Shield } from 'lucide-react';
 import { api } from '../api/client';
 import { AuditLogItem } from '../types';
 import { LoadingSkeleton } from '../components/common/LoadingSkeleton';
@@ -9,13 +9,15 @@ export const AuditLogsPage: React.FC = () => {
   const [logs, setLogs] = useState<AuditLogItem[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(25);
+  const pageSize = 25;
   const [totalPages, setTotalPages] = useState<number>(1);
   const [actionSearch, setActionSearch] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchAuditLogs = async () => {
+  const fetchAuditLogs = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -29,16 +31,20 @@ export const AuditLogsPage: React.FC = () => {
       setLogs(res.items);
       setTotal(res.total);
       setTotalPages(res.total_pages);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      if (err?.status === 403) {
+        setError('Forbidden: Only Super Administrators can view audit and security logs.');
+      } else {
+        setError(err?.message || 'Failed to load audit logs');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, actionSearch]);
 
   useEffect(() => {
     fetchAuditLogs();
-  }, [page, pageSize]);
+  }, [fetchAuditLogs]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +72,13 @@ export const AuditLogsPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-center gap-2">
+          <Shield className="w-4 h-4 text-rose-400 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* Search Bar */}
       <div className="bg-navy-900 border border-charcoal-700 rounded-2xl p-4 shadow-sm">

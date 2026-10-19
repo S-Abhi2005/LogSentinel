@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ShieldCheck,
   Plus,
   RefreshCw,
   Power,
   Trash2,
   AlertCircle,
-  Clock,
-  Layers,
   X,
-  Check,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { DetectionRule, RuleType, ServiceItem } from '../types';
@@ -54,7 +50,9 @@ export const RulesPage: React.FC = () => {
     try {
       const data = await api.get<ServiceItem[]>('/services');
       setServices(data);
-    } catch (_) {}
+    } catch (err) {
+      console.error('Failed to load services for rules:', err);
+    }
   };
 
   useEffect(() => {

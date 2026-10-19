@@ -1,23 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   CheckCircle2,
-  AlertTriangle,
   Play,
   RotateCcw,
-  UserCheck,
   MessageSquare,
   Clock,
-  Layers,
   Terminal,
-  Activity,
   Send,
   AlertCircle,
-  Hash,
 } from 'lucide-react';
 import { api } from '../api/client';
-import { IncidentDetail, User } from '../types';
+import { IncidentDetail, Assignee } from '../types';
 import { SeverityBadge } from '../components/common/SeverityBadge';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { LoadingSkeleton } from '../components/common/LoadingSkeleton';
@@ -26,10 +21,12 @@ import { useAuth } from '../context/AuthContext';
 export const IncidentDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, hasRole } = useAuth();
+  const { hasRole } = useAuth();
 
   const [incident, setIncident] = useState<IncidentDetail | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
+  const [assignees, setAssignees] = useState<Assignee[]>([]);
+  const [assigneesLoading, setAssigneesLoading] = useState<boolean>(false);
+  const [assigneesError, setAssigneesError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [commentText, setCommentText] = useState<string>('');
   const [submittingComment, setSubmittingComment] = useState<boolean>(false);
@@ -37,30 +34,43 @@ export const IncidentDetailPage: React.FC = () => {
 
   const canModify = hasRole(['super_admin', 'engineer']);
 
-  const fetchIncidentDetails = async () => {
+  const fetchAssignees = useCallback(async () => {
+    if (!canModify) return;
+    setAssigneesLoading(true);
+    setAssigneesError(null);
+    try {
+      const data = await api.get<Assignee[]>('/auth/assignees');
+      setAssignees(data || []);
+    } catch (err: any) {
+      if (err?.status === 403) {
+        setAssigneesError('Forbidden: Only engineers and admins can view assignees.');
+      } else {
+        setAssigneesError(err?.message || 'Failed to load assignees');
+      }
+    } finally {
+      setAssigneesLoading(false);
+    }
+  }, [canModify]);
+
+  const fetchIncidentDetails = useCallback(async () => {
     if (!id) return;
     try {
       setLoading(true);
       const data = await api.get<IncidentDetail>(`/incidents/${id}`);
       setIncident(data);
-
-      // Fetch users for assignment if admin
-      if (canModify) {
-        try {
-          const ulist = await api.get<User[]>('/auth/users');
-          setUsers(ulist);
-        } catch (_) {}
-      }
     } catch (err: any) {
       setActionError(err?.message || 'Failed to load incident');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchIncidentDetails();
-  }, [id]);
+    if (canModify) {
+      fetchAssignees();
+    }
+  }, [fetchIncidentDetails, fetchAssignees, canModify]);
 
   const handleStatusTransition = async (action: 'acknowledge' | 'investigate' | 'resolve' | 'reopen') => {
     if (!id) return;
@@ -214,18 +224,28 @@ export const IncidentDetailPage: React.FC = () => {
           <div>
             <span className="text-slate-400 block mb-0.5">Assigned Engineer</span>
             {canModify ? (
-              <select
-                value={incident.assigned_user_id || ''}
-                onChange={(e) => handleAssignUser(e.target.value)}
-                className="bg-navy-950 border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs w-full focus:outline-none focus:border-brand-500"
-              >
-                <option value="">Unassigned</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.full_name} ({u.role})
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-1">
+                <select
+                  value={incident.assigned_user_id || ''}
+                  onChange={(e) => handleAssignUser(e.target.value)}
+                  disabled={assigneesLoading}
+                  className="bg-navy-950 border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs w-full focus:outline-none focus:border-brand-500 disabled:opacity-50 cursor-pointer"
+                >
+                  <option value="">Unassigned</option>
+                  {assigneesLoading && <option disabled>Loading eligible engineers...</option>}
+                  {!assigneesLoading && assignees.length === 0 && (
+                    <option disabled>No assignable engineers available</option>
+                  )}
+                  {assignees.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.full_name} ({u.role})
+                    </option>
+                  ))}
+                </select>
+                {assigneesError && (
+                  <p className="text-[10px] text-rose-400 mt-0.5">{assigneesError}</p>
+                )}
+              </div>
             ) : (
               <span className="font-semibold text-slate-200">{incident.assigned_user_name || 'Unassigned'}</span>
             )}

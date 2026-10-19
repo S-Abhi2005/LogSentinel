@@ -28,7 +28,7 @@ def list_alerts(
     unread_count = db.query(Alert).filter(Alert.is_read == False).count()
 
     return AlertListResponse(
-        items=[AlertResponse.from_orm(a) for a in items],
+        items=[AlertResponse.model_validate(a) for a in items],
         unread_count=unread_count,
         total=total
     )

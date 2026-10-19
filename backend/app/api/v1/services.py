@@ -114,7 +114,7 @@ def modify_service(
         action="SERVICE_UPDATED",
         target_type="service",
         target_id=service.id,
-        details=data.dict(exclude_unset=True)
+        details=data.model_dump(exclude_unset=True)
     )
     db.commit()
     return service

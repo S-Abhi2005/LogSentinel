@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, Activity, CheckCircle2, AlertCircle, RefreshCw, X } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../api/client';
 import { AlertItem } from '../../types';
@@ -35,8 +35,9 @@ export const TopBar: React.FC = () => {
       setAlerts(data.items);
       setUnreadCount(data.unread_count);
       setBackendHealthy(true);
-    } catch (_) {
+    } catch (err) {
       setBackendHealthy(false);
+      console.warn('Backend health check or alert fetch failed:', err);
     }
   };
 
@@ -51,7 +52,9 @@ export const TopBar: React.FC = () => {
       await api.post('/alerts/read-all');
       setUnreadCount(0);
       setAlerts((prev) => prev.map((a) => ({ ...a, is_read: true })));
-    } catch (_) {}
+    } catch (err) {
+      console.error('Failed to mark alerts as read:', err);
+    }
   };
 
   return (

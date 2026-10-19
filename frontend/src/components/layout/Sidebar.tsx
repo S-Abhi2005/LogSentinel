@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Terminal,
@@ -16,7 +16,6 @@ import { useAuth } from '../../context/AuthContext';
 
 export const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
 
   const navItems = [
     { label: 'Overview', to: '/', icon: LayoutDashboard },

@@ -1,6 +1,7 @@
 import os
 import sys
 import pytest
+from datetime import datetime, timezone
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -17,10 +18,59 @@ from app.security.hashing import hash_password, generate_ingestion_key
 from app.security.tokens import create_access_token
 from app.models.service import Service, ServiceIngestionKey
 
-TEST_DATABASE_URL = "postgresql+psycopg2://postgres:abhi%40321@localhost:5432/logsentinel_test"
+from urllib.parse import urlparse, quote_plus
+from dotenv import load_dotenv
 
+# Load local environment variables from .env if present
+env_paths = [
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".env")),
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".env")),
+]
+for p in env_paths:
+    if os.path.exists(p):
+        load_dotenv(p)
+        break
+
+def get_test_database_url() -> str:
+    """
+    Safely resolves the test database URL from environment variables.
+    Strictly verifies that tests only run against an isolated test database (e.g. ending in _test).
+    """
+    test_url = os.getenv("TEST_DATABASE_URL")
+    if not test_url:
+        db_url = os.getenv("DATABASE_URL")
+        if db_url and "test" in db_url.lower():
+            test_url = db_url
+        else:
+            server = os.getenv("POSTGRES_SERVER", "localhost")
+            port = os.getenv("POSTGRES_PORT", "5432")
+            user = os.getenv("POSTGRES_USER", "postgres")
+            password = os.getenv("POSTGRES_PASSWORD")
+            if not password:
+                raise RuntimeError(
+                    "Missing test database credentials: TEST_DATABASE_URL, DATABASE_URL, or POSTGRES_PASSWORD must be set in environment."
+                )
+            test_url = f"postgresql+psycopg2://{user}:{quote_plus(password)}@{server}:{port}/logsentinel_test"
+
+    # Convert generic postgresql:// to postgresql+psycopg2://
+    if test_url.startswith("postgresql://"):
+        test_url = test_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+
+    # SAFETY CHECK: Strictly prevent test harness from modifying production or development databases
+    parsed = urlparse(test_url)
+    db_name = parsed.path.lstrip("/")
+    if not db_name.endswith("_test") and "test" not in db_name.lower():
+        raise RuntimeError(
+            f"SAFETY CHECK FAILED: Attempted to run test suite against non-test database '{db_name}'. "
+            "Tests must target an isolated database ending in '_test'."
+        )
+
+    return test_url
+
+TEST_DATABASE_URL = get_test_database_url()
 test_engine = create_engine(TEST_DATABASE_URL, pool_pre_ping=True)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_database():
@@ -123,3 +173,25 @@ def registered_service(db_session):
     db_session.flush()
 
     return svc, raw_key
+
+@pytest.fixture
+def test_incident(db_session, registered_service):
+    """Creates a sample open incident associated with registered test service."""
+    from app.models.incident import Incident, IncidentStatus, IncidentSeverity
+    svc, _ = registered_service
+    inc = Incident(
+        title="Test Database Failure",
+        description="Database connection dropped",
+        severity=IncidentSeverity.HIGH,
+        status=IncidentStatus.OPEN,
+        service_id=svc.id,
+        environment=svc.environment,
+        fingerprint="test-fingerprint-123",
+        first_detected_at=datetime.now(timezone.utc),
+        last_detected_at=datetime.now(timezone.utc),
+        event_count=1
+    )
+    db_session.add(inc)
+    db_session.commit()
+    db_session.refresh(inc)
+    return inc

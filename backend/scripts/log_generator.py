@@ -4,6 +4,7 @@ import time
 import random
 import argparse
 import requests
+from typing import Optional
 from datetime import datetime, timezone
 
 # Add parent directory to path
@@ -12,29 +13,61 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from app.db.session import SessionLocal
 from app.models.service import Service, ServiceIngestionKey
 
-def fetch_active_service_key(db, service_name: str) -> tuple[str, str]:
-    """Finds service and an active raw key for simulation, or generates a fresh one."""
+def fetch_active_service_key(
+    db,
+    service_name: str,
+    api_key: Optional[str] = None,
+    issue_key: bool = False
+) -> tuple[str, str]:
+    """Finds service and resolves the active raw ingestion key for simulation."""
     svc = db.query(Service).filter(Service.name == service_name).first()
     if not svc:
-        raise ValueError(f"Service '{service_name}' not found. Run seed_data.py first.")
-    
-    # We query the most recently created key or prompt user
+        raise ValueError(f"Service '{service_name}' not found. Please register the service first.")
+
+    # 1. If key is supplied through argument or environment variable, use it directly
+    resolved_key = (api_key or "").strip()
+    if not resolved_key:
+        resolved_key = (os.getenv("LOGSENTINEL_API_KEY") or "").strip()
+    if resolved_key:
+        return svc.environment, resolved_key
+
+    # 2. Check if an active key already exists in the database
     key_entry = db.query(ServiceIngestionKey).filter(
         ServiceIngestionKey.service_id == svc.id,
         ServiceIngestionKey.is_revoked == False
     ).first()
-    
-    if not key_entry:
-        from app.services.service_registry import issue_service_key
-        _, raw = issue_service_key(db, svc.id, f"{service_name}-generator-key")
-        return svc.environment, raw
-    
-    # In production, raw keys cannot be recovered from hash; for generator convenience, we create a generator key if needed
-    from app.services.service_registry import issue_service_key
-    _, raw = issue_service_key(db, svc.id, f"{service_name}-cli-sim-key")
-    return svc.environment, raw
 
-def run_generator(base_url: str, service_name: str, scenario: str, count: int, delay_sec: float):
+    # 3. If explicit issuance was requested via --issue-key, issue a new key
+    if issue_key:
+        from app.services.service_registry import issue_service_key
+        _, raw = issue_service_key(db, svc.id, f"{service_name}-cli-key")
+        return svc.environment, raw
+
+    # 4. If no key is supplied and the database stores only hashed keys, explain that the original secret cannot be recovered.
+    # Ask the user to supply an existing key or explicitly request issuance of a new key. Do not issue keys implicitly.
+    if key_entry:
+        raise ValueError(
+            f"No ingestion API key supplied for service '{service_name}' (active key prefix: '{key_entry.key_prefix}...'). "
+            "LogSentinel stores keys as one-way cryptographic hashes, so the original secret cannot be recovered from the database. "
+            "Please supply an existing key using the '--api-key' option or the 'LOGSENTINEL_API_KEY' environment variable, "
+            "or explicitly request issuance of a new key by passing '--issue-key'."
+        )
+
+    raise ValueError(
+        f"No active ingestion API key found for service '{service_name}'. "
+        "Please supply an existing key using the '--api-key' option or the 'LOGSENTINEL_API_KEY' environment variable, "
+        "or explicitly request issuance of a new key by passing '--issue-key'."
+    )
+
+def run_generator(
+    base_url: str,
+    service_name: str,
+    scenario: str,
+    count: int,
+    delay_sec: float,
+    api_key: Optional[str] = None,
+    issue_key: bool = False
+):
     print("=" * 60)
     print(f"LogSentinel Telemetry Generator -> [{scenario.upper()}]")
     print(f"Target: {base_url}/api/v1/logs/ingest | Service: {service_name}")
@@ -42,13 +75,13 @@ def run_generator(base_url: str, service_name: str, scenario: str, count: int, d
 
     db = SessionLocal()
     try:
-        env, api_key = fetch_active_service_key(db, service_name)
+        env, resolved_key = fetch_active_service_key(db, service_name, api_key=api_key, issue_key=issue_key)
     finally:
         db.close()
 
     headers = {
         "Content-Type": "application/json",
-        "X-API-Key": api_key
+        "X-API-Key": resolved_key
     }
 
     scenarios = {
@@ -108,13 +141,33 @@ def run_generator(base_url: str, service_name: str, scenario: str, count: int, d
 
     print("\nFinished generator run.")
 
-if __name__ == "__main__":
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="LogSentinel Synthetic Log Generator")
-    parser.add_argument("--url", default="http://localhost:8000", help="Backend base URL")
+    parser.add_argument("--url", default=os.getenv("BACKEND_URL", "http://localhost:8001"), help="Backend base URL")
     parser.add_argument("--service", default="payment-service", help="Target registered service")
     parser.add_argument("--scenario", default="normal", choices=["normal", "warning", "error_burst", "critical", "repeated_failure"], help="Scenario to simulate")
     parser.add_argument("--count", type=int, default=10, help="Number of log events to send")
     parser.add_argument("--delay", type=float, default=0.2, help="Delay in seconds between logs")
+    parser.add_argument("--api-key", default=None, help="Service ingestion API key (or set LOGSENTINEL_API_KEY env var)")
+    parser.add_argument("--issue-key", action="store_true", default=False, help="Explicitly issue and save a new ingestion key for this service if none is provided")
+    return parser
 
-    args = parser.parse_args()
-    run_generator(args.url, args.service, args.scenario, args.count, args.delay)
+def main(argv: Optional[list[str]] = None):
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    try:
+        run_generator(
+            args.url,
+            args.service,
+            args.scenario,
+            args.count,
+            args.delay,
+            api_key=args.api_key,
+            issue_key=args.issue_key
+        )
+    except ValueError as e:
+        print(f"\n[ERROR] {e}", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

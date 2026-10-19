@@ -1,5 +1,6 @@
 import time
 import uuid
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,6 +14,7 @@ from app.db.session import engine, SessionLocal
 from app.api.v1.router import api_router
 from app.models.user import User, UserRole
 from app.security.hashing import hash_password
+from app.detection.scheduler import inactivity_scheduler_loop
 
 setup_logging()
 
@@ -55,7 +57,21 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
     
+    # Start service inactivity detection background task
+    scheduler_task = asyncio.create_task(inactivity_scheduler_loop())
+
     yield
+
+    # Shutdown: cancel and clean up background scheduler
+    logger.info("Cancelling service inactivity background scheduler...")
+    scheduler_task.cancel()
+    try:
+        await scheduler_task
+    except asyncio.CancelledError:
+        logger.info("Service inactivity background scheduler terminated.")
+    except Exception as e:
+        logger.error(f"Error during scheduler shutdown: {e}")
+
     logger.info("Shutting down LogSentinel backend.")
 
 app = FastAPI(

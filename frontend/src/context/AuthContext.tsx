@@ -28,6 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const profile = await api.get<User>('/auth/me');
           setUser(profile);
         } catch (err) {
+          console.warn('Session expired or token invalid:', err);
           localStorage.removeItem('logsentinel_token');
           setToken(null);
           setUser(null);
@@ -49,11 +50,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(profile);
   };
 
-  const logout = () => {
-    localStorage.removeItem('logsentinel_token');
-    setToken(null);
-    setUser(null);
-    window.location.href = '/login';
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.warn('Backend logout notification skipped or failed:', err);
+    } finally {
+      localStorage.removeItem('logsentinel_token');
+      setToken(null);
+      setUser(null);
+      window.location.href = '/login';
+    }
   };
 
   const hasRole = (allowed: UserRole[]) => {
@@ -65,7 +72,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const profile = await api.get<User>('/auth/me');
       setUser(profile);
-    } catch (_) {}
+    } catch (err) {
+      console.warn('Failed to refresh user profile:', err);
+    }
   };
 
   return (

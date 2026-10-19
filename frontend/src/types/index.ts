@@ -10,6 +10,13 @@ export interface User {
   updated_at: string;
 }
 
+export interface Assignee {
+  id: string;
+  email: string;
+  full_name: string;
+  role: UserRole;
+}
+
 export interface AuthResponse {
   access_token: string;
   token_type: string;

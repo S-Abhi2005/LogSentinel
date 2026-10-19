@@ -3,16 +3,10 @@ import {
   Server,
   Plus,
   Key,
-  Shield,
-  Activity,
-  AlertTriangle,
-  Clock,
-  Trash2,
-  Copy,
-  Check,
   X,
   AlertCircle,
   RefreshCw,
+  Check,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { ServiceItem, IngestionKey } from '../types';
@@ -88,7 +82,9 @@ export const ServicesPage: React.FC = () => {
     try {
       const kList = await api.get<IngestionKey[]>(`/services/${svc.id}/keys`);
       setKeys(kList);
-    } catch (_) {}
+    } catch (err) {
+      console.error('Failed to load keys for service:', err);
+    }
   };
 
   const handleIssueKey = async (e: React.FormEvent) => {

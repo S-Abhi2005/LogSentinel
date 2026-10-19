@@ -1,18 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  AlertTriangle,
   Search,
-  Filter,
   RefreshCw,
   UserCheck,
-  Calendar,
-  Layers,
   ArrowRight,
   ShieldAlert,
 } from 'lucide-react';
 import { api } from '../api/client';
-import { Incident, IncidentStatus, IncidentSeverity } from '../types';
+import { Incident } from '../types';
 import { SeverityBadge } from '../components/common/SeverityBadge';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { LoadingSkeleton } from '../components/common/LoadingSkeleton';
@@ -23,7 +19,7 @@ export const IncidentsPage: React.FC = () => {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(25);
+  const pageSize = 25;
   const [totalPages, setTotalPages] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -32,7 +28,7 @@ export const IncidentsPage: React.FC = () => {
   const [severityFilter, setSeverityFilter] = useState<string>('');
   const [search, setSearch] = useState<string>('');
 
-  const fetchIncidents = async () => {
+  const fetchIncidents = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -54,11 +50,11 @@ export const IncidentsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, statusFilter, severityFilter, search]);
 
   useEffect(() => {
     fetchIncidents();
-  }, [page, pageSize, statusFilter, severityFilter]);
+  }, [fetchIncidents]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

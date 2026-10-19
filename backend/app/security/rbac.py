@@ -8,7 +8,7 @@ from app.db.session import get_db
 from app.models.user import User, UserRole
 from app.models.service import Service, ServiceIngestionKey
 from app.core.errors import UnauthorizedException, ForbiddenException
-from app.security.tokens import decode_access_token
+from app.security.tokens import decode_access_token, is_token_revoked
 from app.security.hashing import hash_raw_key
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -22,6 +22,9 @@ def get_current_user(
         raise UnauthorizedException("Authentication token missing")
     
     token = credentials.credentials
+    if is_token_revoked(token):
+        raise UnauthorizedException("Access token has been revoked")
+
     payload = decode_access_token(token)
     user_id: Optional[str] = payload.get("sub")
     if not user_id:

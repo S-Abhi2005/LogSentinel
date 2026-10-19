@@ -1,11 +1,13 @@
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 class IncidentCommentCreate(BaseModel):
     comment: str = Field(..., min_length=1, max_length=5000)
 
 class IncidentCommentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     incident_id: str
     user_id: str
@@ -14,10 +16,9 @@ class IncidentCommentResponse(BaseModel):
     comment: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 class IncidentEventResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     incident_id: str
     event_type: str
@@ -26,13 +27,12 @@ class IncidentEventResponse(BaseModel):
     details_json: Optional[Dict[str, Any]] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
-
 class IncidentAssignRequest(BaseModel):
     assigned_user_id: Optional[str] = None  # None unassigns
 
 class IncidentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     title: str
     description: Optional[str]
@@ -54,9 +54,6 @@ class IncidentResponse(BaseModel):
     event_count: int
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 class IncidentDetailResponse(IncidentResponse):
     comments: List[IncidentCommentResponse] = []

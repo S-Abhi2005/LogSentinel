@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 from datetime import datetime, timezone
 from sqlalchemy import Column, String, Integer, DateTime, Text, ForeignKey, JSON
 from sqlalchemy.orm import relationship
@@ -61,6 +62,18 @@ class Incident(Base):
     comments = relationship("IncidentComment", back_populates="incident", cascade="all, delete-orphan", order_by="IncidentComment.created_at.asc()")
     timeline_events = relationship("IncidentEvent", back_populates="incident", cascade="all, delete-orphan", order_by="IncidentEvent.created_at.asc()")
     alerts = relationship("Alert", back_populates="incident", cascade="all, delete-orphan")
+
+    @property
+    def assigned_user_name(self) -> Optional[str]:
+        return self.assigned_user.full_name if self.assigned_user else None
+
+    @property
+    def service_name(self) -> Optional[str]:
+        return self.service.name if self.service else None
+
+    @property
+    def rule_name(self) -> Optional[str]:
+        return self.rule.name if self.rule else None
 
 
 class IncidentLog(Base):

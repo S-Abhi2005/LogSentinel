@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 class LogIngestRequest(BaseModel):
     service_name: str = Field(..., min_length=1, max_length=100)
@@ -36,6 +36,8 @@ class LogBatchIngestResponse(BaseModel):
     triggered_incident_ids: List[str] = []
 
 class LogResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     service_id: str
     service_name: str
@@ -47,9 +49,6 @@ class LogResponse(BaseModel):
     trace_id: Optional[str]
     metadata_json: Optional[Dict[str, Any]]
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 class LogListResponse(BaseModel):
     items: List[LogResponse]

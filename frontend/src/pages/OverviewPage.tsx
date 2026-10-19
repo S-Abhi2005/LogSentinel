@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Activity,
   AlertTriangle,
   AlertCircle,
   Server,
   FileText,
   Bell,
   RefreshCw,
-  TrendingUp,
   ArrowRight,
 } from 'lucide-react';
 import {

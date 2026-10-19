@@ -1,8 +1,10 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class AlertResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     incident_id: Optional[str]
     title: str
@@ -10,9 +12,6 @@ class AlertResponse(BaseModel):
     severity: str
     is_read: bool
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 class AlertListResponse(BaseModel):
     items: List[AlertResponse]

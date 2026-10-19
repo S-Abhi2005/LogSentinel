@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
@@ -84,7 +84,7 @@ def list_logs(
     )
     total_pages = (total + page_size - 1) // page_size if total > 0 else 1
     return LogListResponse(
-        items=[LogResponse.from_orm(item) for item in items],
+        items=[LogResponse.model_validate(item) for item in items],
         total=total,
         page=page,
         page_size=page_size,
@@ -94,8 +94,11 @@ def list_logs(
 @router.get("/export")
 def export_logs(
     service_id: Optional[str] = None,
+    service_name: Optional[str] = None,
     environment: Optional[str] = None,
     severity: Optional[str] = None,
+    source: Optional[str] = None,
+    trace_id: Optional[str] = None,
     search: Optional[str] = None,
     start_time: Optional[datetime] = None,
     end_time: Optional[datetime] = None,
@@ -106,8 +109,11 @@ def export_logs(
     csv_data = export_logs_csv(
         db=db,
         service_id=service_id,
+        service_name=service_name,
         environment=environment,
         severity=severity,
+        source=source,
+        trace_id=trace_id,
         search=search,
         start_time=start_time,
         end_time=end_time,
@@ -116,7 +122,7 @@ def export_logs(
     return Response(
         content=csv_data,
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename=logsentinel_export_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"}
+        headers={"Content-Disposition": f"attachment; filename=logsentinel_export_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.csv"}
     )
 
 @router.get("/{log_id}", response_model=LogResponse)

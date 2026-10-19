@@ -33,7 +33,7 @@ def list_audit_logs(
     total_pages = (total + page_size - 1) // page_size if total > 0 else 1
 
     return AuditLogListResponse(
-        items=[AuditLogResponse.from_orm(item) for item in items],
+        items=[AuditLogResponse.model_validate(item) for item in items],
         total=total,
         page=page,
         page_size=page_size,

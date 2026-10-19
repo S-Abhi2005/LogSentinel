@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc, asc
 
 from app.models.incident import Incident, IncidentStatus, IncidentComment, IncidentEvent, IncidentLog
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.log import LogEntry
 from app.core.errors import NotFoundException, BadRequestException
 from app.services.audit_service import log_audit_event
@@ -89,6 +89,13 @@ def assign_incident(
         target_user = db.query(User).filter(User.id == assigned_user_id).first()
         if not target_user:
             raise NotFoundException("User to assign", assigned_user_id)
+        if not target_user.is_active:
+            raise BadRequestException("Cannot assign incident to a deactivated user")
+        if target_user.role not in [UserRole.SUPER_ADMIN, UserRole.ENGINEER]:
+            raise BadRequestException(
+                f"Cannot assign incident to user with role '{target_user.role}'. "
+                "Only engineers and super administrators are eligible for incident assignment."
+            )
         assigned_user_name = target_user.full_name
 
     incident.assigned_user_id = assigned_user_id

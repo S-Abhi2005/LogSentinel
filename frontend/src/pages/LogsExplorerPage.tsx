@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Search,
-  Filter,
   Download,
   Copy,
   Check,
   ChevronDown,
   ChevronRight,
-  ExternalLink,
   RefreshCw,
-  Clock,
-  Layers,
   X,
 } from 'lucide-react';
 import { api } from '../api/client';
@@ -44,10 +40,12 @@ export const LogsExplorerPage: React.FC = () => {
     try {
       const data = await api.get<ServiceItem[]>('/services');
       setServices(data);
-    } catch (_) {}
+    } catch (err) {
+      console.error('Failed to load services for filter:', err);
+    }
   };
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     setLoading(true);
     try {
       let startTime = '';
@@ -78,7 +76,7 @@ export const LogsExplorerPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, severity, serviceName, environment, search, traceId, timeRange]);
 
   useEffect(() => {
     fetchServices();
@@ -86,7 +84,7 @@ export const LogsExplorerPage: React.FC = () => {
 
   useEffect(() => {
     fetchLogs();
-  }, [page, pageSize, severity, serviceName, environment, timeRange]);
+  }, [fetchLogs]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,10 +109,21 @@ export const LogsExplorerPage: React.FC = () => {
   };
 
   const handleExportCSV = async () => {
+    let startTime = '';
+    const now = new Date();
+    if (timeRange === '1h') startTime = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
+    else if (timeRange === '6h') startTime = new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString();
+    else if (timeRange === '24h') startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+    else if (timeRange === '7d') startTime = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
     const params = new URLSearchParams();
     if (severity) params.append('severity', severity);
+    if (serviceName) params.append('service_name', serviceName);
     if (environment) params.append('environment', environment);
     if (search.trim()) params.append('search', search.trim());
+    if (traceId.trim()) params.append('trace_id', traceId.trim());
+    if (startTime) params.append('start_time', startTime);
+
     await api.downloadBlob(`/logs/export?${params.toString()}`, `logsentinel_export_${Date.now()}.csv`);
   };
 

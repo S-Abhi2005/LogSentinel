@@ -1,18 +1,20 @@
 from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, status, Request, Security
+from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.user import User, UserRole
 from app.schemas.auth import (
     LoginRequest, TokenResponse, UserCreate, UserUpdate, 
-    ChangePasswordRequest, UserResponse
+    ChangePasswordRequest, UserResponse, AssigneeResponse
 )
 from app.security.hashing import hash_password, verify_password
-from app.security.tokens import create_access_token
+from app.security.tokens import create_access_token, revoke_token
 from app.security.rbac import (
-    get_current_user, require_super_admin, require_viewer_or_above
+    get_current_user, require_super_admin, require_engineer_or_admin, require_viewer_or_above,
+    bearer_scheme
 )
 from app.core.errors import UnauthorizedException, ConflictException, NotFoundException, BadRequestException
 from app.services.audit_service import log_audit_event
@@ -63,6 +65,27 @@ def login(data: LoginRequest, request: Request, db: Session = Depends(get_db)):
 def get_current_user_profile(current_user: User = Depends(get_current_user)):
     return current_user
 
+@router.post("/logout")
+def logout_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_scheme),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Revokes the current JWT access token and logs audit event."""
+    if credentials:
+        revoke_token(credentials.credentials)
+
+    log_audit_event(
+        db=db,
+        actor_email=current_user.email,
+        actor_role=current_user.role,
+        action="LOGOUT",
+        target_type="auth",
+        target_id=current_user.id
+    )
+    db.commit()
+    return {"message": "Logged out successfully"}
+
 @router.post("/change-password")
 def change_password(
     data: ChangePasswordRequest,
@@ -85,6 +108,20 @@ def change_password(
     )
     db.commit()
     return {"message": "Password updated successfully"}
+
+@router.get("/assignees", response_model=List[AssigneeResponse])
+def list_assignees(
+    current_user: User = Depends(require_engineer_or_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns active users eligible for incident assignment (Engineers and Super Admins).
+    Accessible to engineers and super administrators.
+    """
+    return db.query(User).filter(
+        User.is_active == True,
+        User.role.in_([UserRole.SUPER_ADMIN, UserRole.ENGINEER])
+    ).order_by(User.full_name.asc()).all()
 
 @router.get("/users", response_model=List[UserResponse])
 def list_users(
@@ -158,7 +195,7 @@ def update_user(
         action="USER_UPDATED",
         target_type="user",
         target_id=user.id,
-        details={"updated_fields": data.dict(exclude_unset=True)}
+        details={"updated_fields": data.model_dump(exclude_unset=True)}
     )
     db.commit()
     db.refresh(user)

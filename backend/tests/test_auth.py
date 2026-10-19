@@ -55,3 +55,48 @@ def test_change_password(client, test_users, admin_headers, db_session):
         "password": "NewSecurePassword456!"
     })
     assert login_resp.status_code == 200
+
+def test_audit_logs_role_access_boundary(client, admin_headers, engineer_headers, viewer_headers):
+    # 1. Super Admin can access audit logs
+    admin_resp = client.get("/api/v1/audit-logs", headers=admin_headers)
+    assert admin_resp.status_code == 200
+    assert "items" in admin_resp.json()
+
+    # 2. Engineer is denied access (403 Forbidden)
+    eng_resp = client.get("/api/v1/audit-logs", headers=engineer_headers)
+    assert eng_resp.status_code == 403
+    assert "forbidden" in eng_resp.json()["detail"]["code"].lower()
+
+    # 3. Viewer is denied access (403 Forbidden)
+    viewer_resp = client.get("/api/v1/audit-logs", headers=viewer_headers)
+    assert viewer_resp.status_code == 403
+    assert "forbidden" in viewer_resp.json()["detail"]["code"].lower()
+
+    # 4. Unauthenticated is denied access (401 Unauthorized)
+    unauth_resp = client.get("/api/v1/audit-logs")
+    assert unauth_resp.status_code == 401
+
+def test_logout_and_token_revocation(client, test_users):
+    # 1. Login to obtain a fresh access token
+    login_resp = client.post("/api/v1/auth/login", json={
+        "email": "engineer@test.local",
+        "password": "EngineerTestPass123!"
+    })
+    assert login_resp.status_code == 200
+    token = login_resp.json()["access_token"]
+    auth_headers = {"Authorization": f"Bearer {token}"}
+
+    # 2. Token works before logout
+    me_resp = client.get("/api/v1/auth/me", headers=auth_headers)
+    assert me_resp.status_code == 200
+    assert me_resp.json()["email"] == "engineer@test.local"
+
+    # 3. Perform logout
+    logout_resp = client.post("/api/v1/auth/logout", headers=auth_headers)
+    assert logout_resp.status_code == 200
+    assert "successfully" in logout_resp.json()["message"].lower()
+
+    # 4. Token is revoked and rejected on subsequent requests
+    subsequent_resp = client.get("/api/v1/auth/me", headers=auth_headers)
+    assert subsequent_resp.status_code == 401
+    assert "revoked" in subsequent_resp.json()["detail"]["message"].lower()
