@@ -141,7 +141,7 @@ cd frontend
 npm.cmd run dev
 # (or 'npm run dev' if PowerShell ExecutionPolicy is configured)
 ```
-Open browser at **[http://localhost:5174](http://localhost:5174)** *(or http://127.0.0.1:5174)*.
+Open browser at **[https://gravity-rover-stood-break.trycloudflare.com]** *(or http://127.0.0.1:5174)*.
 
 
 
