@@ -6,6 +6,7 @@ import {
   Trash2,
   AlertCircle,
   X,
+  ShieldCheck,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { DetectionRule, RuleType, ServiceItem } from '../types';
@@ -118,15 +119,15 @@ export const RulesPage: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-white tracking-tight">Detection Rules Engine</h1>
-          <p className="text-xs text-slate-400">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Detection Rules Engine</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Real-time automated incident detection policies and anomaly triggers
           </p>
         </div>
         <div className="flex items-center space-x-3">
           <button
             onClick={fetchRules}
-            className="flex items-center space-x-2 px-3 py-1.5 bg-navy-900 hover:bg-slate-800 border border-charcoal-700 rounded-lg text-xs font-medium text-slate-200 transition cursor-pointer"
+            className="flex items-center space-x-2 px-3 py-1.5 bg-white dark:bg-navy-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-charcoal-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 transition cursor-pointer shadow-sm"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Refresh</span>
@@ -134,7 +135,7 @@ export const RulesPage: React.FC = () => {
           {isAdmin && (
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center space-x-2 px-3.5 py-1.5 bg-brand-600 hover:bg-brand-500 rounded-lg text-xs font-medium text-white transition shadow-sm cursor-pointer"
+              className="flex items-center space-x-2 px-3.5 py-1.5 bg-brand-600 hover:bg-brand-500 rounded-lg text-xs font-semibold text-white transition shadow-sm cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Create Rule</span>
@@ -151,14 +152,16 @@ export const RulesPage: React.FC = () => {
           {rules.map((rule) => (
             <div
               key={rule.id}
-              className={`bg-navy-900 border rounded-2xl p-5 shadow-sm transition flex flex-col justify-between ${
-                rule.is_enabled ? 'border-charcoal-700' : 'border-slate-800/60 opacity-60'
+              className={`bg-white dark:bg-navy-900 border rounded-2xl p-5 shadow-sm transition-colors duration-150 flex flex-col justify-between ${
+                rule.is_enabled
+                  ? 'border-slate-200 dark:border-charcoal-700'
+                  : 'border-slate-200 dark:border-slate-800/60 opacity-60 bg-slate-50/50 dark:bg-navy-900/60'
               }`}
             >
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-300 uppercase tracking-wider">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 uppercase tracking-wider border border-slate-200 dark:border-slate-700">
                       {formatRuleType(rule.rule_type)}
                     </span>
                     <SeverityBadge severity={rule.severity} size="sm" />
@@ -169,8 +172,8 @@ export const RulesPage: React.FC = () => {
                         onClick={() => handleToggleRule(rule)}
                         className={`p-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
                           rule.is_enabled
-                            ? 'text-emerald-400 bg-emerald-950/40 hover:bg-emerald-900/60'
-                            : 'text-slate-500 bg-slate-800/40 hover:bg-slate-800'
+                            ? 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60'
+                            : 'text-slate-500 bg-slate-100 dark:bg-slate-800/40 hover:bg-slate-200 dark:hover:bg-slate-800'
                         }`}
                         title={rule.is_enabled ? 'Disable Rule' : 'Enable Rule'}
                       >
@@ -178,8 +181,8 @@ export const RulesPage: React.FC = () => {
                       </button>
                       <button
                         onClick={() => handleDeleteRule(rule.id)}
-                        className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-950/40 rounded-lg transition cursor-pointer"
-                        title="Delete/Disable Rule"
+                        className="p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition cursor-pointer"
+                        title="Delete Rule"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -187,25 +190,25 @@ export const RulesPage: React.FC = () => {
                   )}
                 </div>
 
-                <h3 className="text-base font-bold text-white mb-1">{rule.name}</h3>
-                <p className="text-xs text-slate-400 mb-4 leading-relaxed">{rule.description || 'No description provided.'}</p>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">{rule.name}</h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">{rule.description || 'No description provided.'}</p>
               </div>
 
               {/* Parameters & Scope */}
-              <div className="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between text-[11px] text-slate-400 gap-2">
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 gap-2">
                 <div className="flex items-center space-x-3">
                   <span>
-                    Threshold: <strong className="text-slate-200">{rule.threshold}</strong>
+                    Threshold: <strong className="text-slate-800 dark:text-slate-200">{rule.threshold}</strong>
                   </span>
                   <span>
-                    Window: <strong className="text-slate-200">{rule.time_window_seconds}s</strong>
+                    Window: <strong className="text-slate-800 dark:text-slate-200">{rule.time_window_seconds}s</strong>
                   </span>
                   <span>
-                    Cooldown: <strong className="text-slate-200">{rule.cooldown_seconds}s</strong>
+                    Cooldown: <strong className="text-slate-800 dark:text-slate-200">{rule.cooldown_seconds}s</strong>
                   </span>
                 </div>
                 {rule.error_signature_pattern && (
-                  <span className="font-mono text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20">
+                  <span className="font-mono text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10 px-2 py-0.5 rounded border border-brand-200 dark:border-brand-500/20">
                     pattern: "{rule.error_signature_pattern}"
                   </span>
                 )}
@@ -217,56 +220,59 @@ export const RulesPage: React.FC = () => {
 
       {/* Create Rule Modal Dialog */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-navy-900 border border-charcoal-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white">Create Incident Detection Rule</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-charcoal-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div className="flex items-center space-x-2">
+                <ShieldCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Create Incident Detection Rule</h3>
+              </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {formError && (
-              <div className="p-3 bg-red-950 border border-red-800 rounded-xl text-red-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+              <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-500 dark:text-red-400 shrink-0" />
                 <span>{formError}</span>
               </div>
             )}
 
             <form onSubmit={handleCreateRule} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Rule Name</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Rule Name</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Critical Gateway Outage Alert"
-                  className="w-full bg-navy-950 border border-slate-800 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-brand-500"
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-lg p-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Description</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Description</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Explains when and why this rule triggers an incident..."
                   rows={2}
-                  className="w-full bg-navy-950 border border-slate-800 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-brand-500"
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-lg p-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Rule Type</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Rule Type</label>
                   <select
                     value={ruleType}
                     onChange={(e) => setRuleType(e.target.value as RuleType)}
-                    className="w-full bg-navy-950 border border-slate-800 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-brand-500"
+                    className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-lg p-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 font-medium"
                   >
                     <option value="error_threshold">Error Threshold</option>
                     <option value="critical_log">Critical Log</option>
@@ -277,11 +283,11 @@ export const RulesPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Incident Severity</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Incident Severity</label>
                   <select
                     value={severity}
                     onChange={(e) => setSeverity(e.target.value)}
-                    className="w-full bg-navy-950 border border-slate-800 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-brand-500"
+                    className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-lg p-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 font-medium"
                   >
                     <option value="CRITICAL">CRITICAL</option>
                     <option value="HIGH">HIGH</option>
@@ -293,43 +299,43 @@ export const RulesPage: React.FC = () => {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Threshold</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Threshold</label>
                   <input
                     type="number"
                     step="0.01"
                     required
                     value={threshold}
                     onChange={(e) => setThreshold(e.target.value)}
-                    className="w-full bg-navy-950 border border-slate-800 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-brand-500"
+                    className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-lg p-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Window (sec)</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Window (sec)</label>
                   <input
                     type="number"
                     required
                     value={timeWindowSeconds}
                     onChange={(e) => setTimeWindowSeconds(e.target.value)}
-                    className="w-full bg-navy-950 border border-slate-800 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-brand-500"
+                    className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-lg p-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Cooldown (sec)</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Cooldown (sec)</label>
                   <input
                     type="number"
                     required
                     value={cooldownSeconds}
                     onChange={(e) => setCooldownSeconds(e.target.value)}
-                    className="w-full bg-navy-950 border border-slate-800 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-brand-500"
+                    className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-lg p-2 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500"
                   />
                 </div>
               </div>
 
               {ruleType === 'repeated_failure' && (
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                     Error Signature Pattern (substring match)
                   </label>
                   <input
@@ -337,19 +343,19 @@ export const RulesPage: React.FC = () => {
                     value={errorSignaturePattern}
                     onChange={(e) => setErrorSignaturePattern(e.target.value)}
                     placeholder="e.g. connection pool exhausted"
-                    className="w-full bg-navy-950 border border-slate-800 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-brand-500 font-mono"
+                    className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-lg p-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 font-mono"
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
                   Service Scope (Optional)
                 </label>
                 <select
                   value={selectedServiceId}
                   onChange={(e) => setSelectedServiceId(e.target.value)}
-                  className="w-full bg-navy-950 border border-slate-800 rounded-lg p-2 text-slate-100 focus:outline-none focus:border-brand-500"
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-lg p-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500"
                 >
                   <option value="">Global (Applies across all services)</option>
                   {services.map((s) => (
@@ -360,17 +366,17 @@ export const RulesPage: React.FC = () => {
                 </select>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg font-medium cursor-pointer"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg font-medium cursor-pointer transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-medium cursor-pointer"
+                  className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg font-semibold cursor-pointer transition shadow-sm"
                 >
                   Save Detection Rule
                 </button>

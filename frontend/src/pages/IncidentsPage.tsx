@@ -74,15 +74,15 @@ export const IncidentsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-white tracking-tight">Incident Management</h1>
-          <p className="text-xs text-slate-400">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Incident Management</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Rule-triggered incidents, deduplication status, triage and resolution lifecycle
           </p>
         </div>
         <div className="flex items-center space-x-3">
           <button
             onClick={fetchIncidents}
-            className="flex items-center space-x-2 px-3 py-1.5 bg-navy-900 hover:bg-slate-800 border border-charcoal-700 rounded-lg text-xs font-medium text-slate-200 transition cursor-pointer"
+            className="flex items-center space-x-2 px-3 py-1.5 bg-white dark:bg-navy-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-charcoal-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 transition cursor-pointer shadow-sm"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Refresh</span>
@@ -91,10 +91,10 @@ export const IncidentsPage: React.FC = () => {
       </div>
 
       {/* Filter Tabs and Controls */}
-      <div className="bg-navy-900 border border-charcoal-700 rounded-2xl p-4 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-charcoal-700 rounded-2xl p-4 shadow-sm space-y-4 transition-colors duration-150">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Status Tab buttons */}
-          <div className="flex flex-wrap gap-1.5 p-1 bg-navy-950 rounded-xl border border-slate-800">
+          <div className="flex flex-wrap gap-1.5 p-1 bg-slate-100 dark:bg-navy-950 rounded-xl border border-slate-200 dark:border-slate-800">
             {['', 'OPEN', 'ACKNOWLEDGED', 'INVESTIGATING', 'RESOLVED'].map((st) => (
               <button
                 key={st}
@@ -105,7 +105,7 @@ export const IncidentsPage: React.FC = () => {
                 className={`px-3 py-1 rounded-lg text-xs font-medium transition cursor-pointer ${
                   statusFilter === st
                     ? 'bg-brand-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800/60'
                 }`}
               >
                 {st === '' ? 'All Statuses' : st}
@@ -115,14 +115,14 @@ export const IncidentsPage: React.FC = () => {
 
           {/* Severity selector */}
           <div className="flex items-center space-x-2">
-            <span className="text-xs text-slate-400 whitespace-nowrap">Severity:</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">Severity:</span>
             <select
               value={severityFilter}
               onChange={(e) => {
                 setSeverityFilter(e.target.value);
                 setPage(1);
               }}
-              className="bg-navy-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500"
+              className="bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-500"
             >
               <option value="">All Severities</option>
               <option value="CRITICAL">CRITICAL</option>
@@ -142,12 +142,12 @@ export const IncidentsPage: React.FC = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search incidents by title..."
-              className="w-full bg-navy-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 transition"
+              className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 transition"
             />
           </div>
           <button
             type="submit"
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-medium transition cursor-pointer"
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white rounded-lg text-xs font-medium transition cursor-pointer"
           >
             Filter
           </button>
@@ -155,10 +155,10 @@ export const IncidentsPage: React.FC = () => {
       </div>
 
       {/* Incidents Table */}
-      <div className="bg-navy-900 border border-charcoal-700 rounded-2xl overflow-hidden shadow-sm">
-        <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
+      <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-charcoal-700 rounded-2xl overflow-hidden shadow-sm transition-colors duration-150">
+        <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <span>
-            Total <strong className="text-slate-200">{total}</strong> incident records
+            Total <strong className="text-slate-800 dark:text-slate-200">{total}</strong> incident records
           </span>
           <span>Page {page} of {totalPages || 1}</span>
         </div>
@@ -180,7 +180,7 @@ export const IncidentsPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-navy-950 text-slate-400 uppercase font-mono tracking-wider border-b border-slate-800">
+              <thead className="bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 uppercase font-mono tracking-wider border-b border-slate-200 dark:border-slate-800">
                 <tr>
                   <th className="py-3 px-4">Severity</th>
                   <th className="py-3 px-4">Incident Title</th>
@@ -192,45 +192,45 @@ export const IncidentsPage: React.FC = () => {
                   <th className="py-3 px-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {incidents.map((inc) => (
                   <tr
                     key={inc.id}
                     onClick={() => navigate(`/incidents/${inc.id}`)}
-                    className="hover:bg-slate-800/40 cursor-pointer transition"
+                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition"
                   >
                     <td className="py-3.5 px-4">
                       <SeverityBadge severity={inc.severity} size="sm" />
                     </td>
                     <td className="py-3.5 px-4 max-w-xs sm:max-w-md">
-                      <div className="font-semibold text-slate-100 line-clamp-1">{inc.title}</div>
-                      <div className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
-                        Triggered by rule: <span className="text-slate-300">{inc.rule_name || 'Standard Policy'}</span>
+                      <div className="font-semibold text-slate-800 dark:text-slate-100 line-clamp-1">{inc.title}</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                        Triggered by rule: <span className="text-slate-700 dark:text-slate-300">{inc.rule_name || 'Standard Policy'}</span>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-slate-300">
+                    <td className="py-3.5 px-4 font-mono text-slate-700 dark:text-slate-300">
                       <div>{inc.service_name}</div>
                       <span className="text-[10px] text-slate-400 capitalize">{inc.environment}</span>
                     </td>
                     <td className="py-3.5 px-4">
                       <StatusBadge status={inc.status} />
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-slate-300">
-                      <span className="px-2 py-0.5 bg-slate-800 rounded-md text-[11px]">
+                    <td className="py-3.5 px-4 font-mono text-slate-700 dark:text-slate-300">
+                      <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md text-[11px]">
                         {inc.event_count} logs
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-300">
+                    <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300">
                       {inc.assigned_user_name ? (
-                        <span className="inline-flex items-center gap-1 text-slate-200">
-                          <UserCheck className="w-3.5 h-3.5 text-brand-400" />
+                        <span className="inline-flex items-center gap-1 text-slate-800 dark:text-slate-200">
+                          <UserCheck className="w-3.5 h-3.5 text-brand-500" />
                           <span>{inc.assigned_user_name}</span>
                         </span>
                       ) : (
                         <span className="text-slate-400 italic">Unassigned</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-slate-400 whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">
                       {new Date(inc.last_detected_at).toLocaleString([], {
                         month: 'short',
                         day: 'numeric',
@@ -239,7 +239,7 @@ export const IncidentsPage: React.FC = () => {
                       })}
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <span className="text-brand-400 hover:text-brand-300 font-medium inline-flex items-center gap-1">
+                      <span className="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-medium inline-flex items-center gap-1">
                         <span>Investigate</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </span>
@@ -252,7 +252,7 @@ export const IncidentsPage: React.FC = () => {
         )}
 
         {/* Pagination Bar */}
-        <div className="px-5 py-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+        <div className="px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <div>
             Showing page {page} of {totalPages || 1}
           </div>
@@ -260,14 +260,14 @@ export const IncidentsPage: React.FC = () => {
             <button
               disabled={page <= 1}
               onClick={() => setPage(page - 1)}
-              className="px-3 py-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 rounded transition cursor-pointer"
+              className="px-3 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 rounded transition cursor-pointer"
             >
               Previous
             </button>
             <button
               disabled={page >= totalPages}
               onClick={() => setPage(page + 1)}
-              className="px-3 py-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 rounded transition cursor-pointer"
+              className="px-3 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 rounded transition cursor-pointer"
             >
               Next
             </button>

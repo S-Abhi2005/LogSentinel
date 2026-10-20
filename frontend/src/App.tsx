@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Layout } from './components/layout/Layout';
 import { LoadingSkeleton } from './components/common/LoadingSkeleton';
 
@@ -28,7 +29,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-navy-950 flex items-center justify-center p-8">
+      <div className="min-h-screen bg-slate-50 dark:bg-navy-950 flex items-center justify-center p-8">
         <LoadingSkeleton rows={4} height="h-16" className="w-80" />
       </div>
     );
@@ -46,7 +47,7 @@ const AdminRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =>
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-navy-950 flex items-center justify-center p-8">
+      <div className="min-h-screen bg-slate-50 dark:bg-navy-950 flex items-center justify-center p-8">
         <LoadingSkeleton rows={4} height="h-16" className="w-80" />
       </div>
     );
@@ -65,14 +66,15 @@ const AdminRoute: React.FC<{ children: React.ReactElement }> = ({ children }) =>
 
 export const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Suspense fallback={<PageSuspenseFallback />}>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<PageSuspenseFallback />}>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
 
-            <Route
-              path="/"
+              <Route
+                path="/"
               element={
                 <ProtectedRoute>
                   <Layout />
@@ -102,6 +104,7 @@ export const App: React.FC = () => {
         </Suspense>
       </BrowserRouter>
     </AuthProvider>
+  </ThemeProvider>
   );
 };
 

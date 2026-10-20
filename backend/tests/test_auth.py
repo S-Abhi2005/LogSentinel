@@ -100,3 +100,24 @@ def test_logout_and_token_revocation(client, test_users):
     subsequent_resp = client.get("/api/v1/auth/me", headers=auth_headers)
     assert subsequent_resp.status_code == 401
     assert "revoked" in subsequent_resp.json()["detail"]["message"].lower()
+
+def test_update_current_user_profile(client, engineer_headers):
+    # 1. Update own profile name
+    update_resp = client.patch("/api/v1/auth/me", headers=engineer_headers, json={
+        "full_name": "Updated Engineer Name"
+    })
+    assert update_resp.status_code == 200
+    data = update_resp.json()
+    assert data["full_name"] == "Updated Engineer Name"
+
+    # 2. Verify subsequent GET /me reflects the new name
+    me_resp = client.get("/api/v1/auth/me", headers=engineer_headers)
+    assert me_resp.status_code == 200
+    assert me_resp.json()["full_name"] == "Updated Engineer Name"
+
+def test_update_profile_validation(client, engineer_headers):
+    # Name too short should fail validation
+    resp = client.patch("/api/v1/auth/me", headers=engineer_headers, json={
+        "full_name": "A"
+    })
+    assert resp.status_code in [400, 422]

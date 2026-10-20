@@ -57,15 +57,15 @@ export const AuditLogsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-white tracking-tight">Audit & Security Logs</h1>
-          <p className="text-xs text-slate-400">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Audit & Security Logs</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Immutable append-only record of administrative operations and authentication events
           </p>
         </div>
         <div className="flex items-center space-x-3">
           <button
             onClick={fetchAuditLogs}
-            className="flex items-center space-x-2 px-3 py-1.5 bg-navy-900 hover:bg-slate-800 border border-charcoal-700 rounded-lg text-xs font-medium text-slate-200 transition cursor-pointer"
+            className="flex items-center space-x-2 px-3 py-1.5 bg-white dark:bg-navy-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-charcoal-700 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 shadow-sm transition cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Refresh</span>
@@ -74,14 +74,14 @@ export const AuditLogsPage: React.FC = () => {
       </div>
 
       {error && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-center gap-2">
-          <Shield className="w-4 h-4 text-rose-400 shrink-0" />
+        <div className="p-4 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
+          <Shield className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Search Bar */}
-      <div className="bg-navy-900 border border-charcoal-700 rounded-2xl p-4 shadow-sm">
+      <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-charcoal-700 rounded-2xl p-4 shadow-sm">
         <form onSubmit={handleSearchSubmit} className="flex gap-2">
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3 pointer-events-none" />
@@ -89,13 +89,13 @@ export const AuditLogsPage: React.FC = () => {
               type="text"
               value={actionSearch}
               onChange={(e) => setActionSearch(e.target.value)}
-              placeholder="Search action or event (e.g. 'LOGIN_SUCCESS', 'SERVICE_CREATED', 'RULE_UPDATED')..."
-              className="w-full bg-navy-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 font-mono"
+              placeholder="Search action or event (e.g. 'LOGIN_SUCCESS', 'SERVICE_CREATED', 'RULE_UPDATED', 'PROFILE_UPDATED')..."
+              className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-brand-500 font-mono"
             />
           </div>
           <button
             type="submit"
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-medium cursor-pointer"
+            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-medium transition cursor-pointer shadow-sm"
           >
             Filter
           </button>
@@ -103,10 +103,10 @@ export const AuditLogsPage: React.FC = () => {
       </div>
 
       {/* Audit Table */}
-      <div className="bg-navy-900 border border-charcoal-700 rounded-2xl overflow-hidden shadow-sm">
-        <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400">
+      <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-charcoal-700 rounded-2xl overflow-hidden shadow-sm">
+        <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <span>
-            Total <strong className="text-slate-200">{total}</strong> security audit entries
+            Total <strong className="text-slate-900 dark:text-slate-200 font-semibold">{total}</strong> security audit entries
           </span>
           <span>Page {page} of {totalPages || 1}</span>
         </div>
@@ -126,7 +126,7 @@ export const AuditLogsPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-navy-950 text-slate-400 uppercase tracking-wider border-b border-slate-800">
+              <thead className="bg-slate-50 dark:bg-navy-950 text-slate-600 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
                 <tr>
                   <th className="py-2.5 px-4 w-44">Timestamp (UTC)</th>
                   <th className="py-2.5 px-4">Action</th>
@@ -136,31 +136,31 @@ export const AuditLogsPage: React.FC = () => {
                   <th className="py-2.5 px-4 w-28">IP Address</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-800/40 transition">
-                    <td className="py-3 px-4 text-slate-400 whitespace-nowrap">
+                  <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                    <td className="py-3 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">
                       {new Date(log.created_at).toISOString().replace('T', ' ').slice(0, 19)}
                     </td>
                     <td className="py-3 px-4">
-                      <span className="font-bold text-slate-200 px-2 py-0.5 rounded bg-slate-800 border border-slate-700">
+                      <span className="font-bold text-slate-800 dark:text-slate-200 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                         {log.action}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-slate-300">
-                      <div>{log.actor_email}</div>
-                      <span className="text-[10px] text-slate-400 font-sans capitalize">
+                    <td className="py-3 px-4 text-slate-700 dark:text-slate-300">
+                      <div className="font-medium">{log.actor_email}</div>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-sans capitalize">
                         {log.actor_role?.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-slate-300 capitalize font-sans">
+                    <td className="py-3 px-4 text-slate-700 dark:text-slate-300 capitalize font-sans">
                       {log.target_type}
-                      {log.target_id && <span className="block text-[10px] font-mono text-slate-400">{log.target_id.slice(0, 12)}...</span>}
+                      {log.target_id && <span className="block text-[10px] font-mono text-slate-400 dark:text-slate-500">{log.target_id.slice(0, 12)}...</span>}
                     </td>
-                    <td className="py-3 px-4 max-w-xs truncate text-slate-400 text-[11px]">
+                    <td className="py-3 px-4 max-w-xs truncate text-slate-500 dark:text-slate-400 text-[11px]">
                       {log.details_json ? JSON.stringify(log.details_json) : '-'}
                     </td>
-                    <td className="py-3 px-4 text-slate-400 text-[11px]">
+                    <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-[11px]">
                       {log.ip_address || 'internal'}
                     </td>
                   </tr>
@@ -171,7 +171,7 @@ export const AuditLogsPage: React.FC = () => {
         )}
 
         {/* Pagination Bar */}
-        <div className="px-5 py-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+        <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <div>
             Showing page {page} of {totalPages || 1}
           </div>
@@ -179,14 +179,14 @@ export const AuditLogsPage: React.FC = () => {
             <button
               disabled={page <= 1}
               onClick={() => setPage(page - 1)}
-              className="px-3 py-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 rounded transition cursor-pointer"
+              className="px-3 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 rounded transition cursor-pointer border border-slate-200 dark:border-transparent"
             >
               Previous
             </button>
             <button
               disabled={page >= totalPages}
               onClick={() => setPage(page + 1)}
-              className="px-3 py-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 rounded transition cursor-pointer"
+              className="px-3 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 rounded transition cursor-pointer border border-slate-200 dark:border-transparent"
             >
               Next
             </button>

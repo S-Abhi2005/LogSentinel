@@ -16,7 +16,7 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
       {Array.from({ length: rows }).map((_, idx) => (
         <div
           key={idx}
-          className={`w-full bg-slate-800/60 rounded-lg ${height} border border-slate-700/40`}
+          className={`w-full bg-slate-200/80 dark:bg-slate-800/60 rounded-lg ${height} border border-slate-300/60 dark:border-slate-700/40`}
         />
       ))}
     </div>

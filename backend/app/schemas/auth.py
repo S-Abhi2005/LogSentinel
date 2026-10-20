@@ -25,6 +25,9 @@ class UserUpdate(BaseModel):
     role: Optional[str] = None
     is_active: Optional[bool] = None
 
+class UserProfileUpdate(BaseModel):
+    full_name: str = Field(..., min_length=2, max_length=100)
+
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str = Field(..., min_length=8)

@@ -10,6 +10,7 @@ import {
   Terminal,
   Send,
   AlertCircle,
+  X,
 } from 'lucide-react';
 import { api } from '../api/client';
 import { IncidentDetail, Assignee } from '../types';
@@ -31,6 +32,11 @@ export const IncidentDetailPage: React.FC = () => {
   const [commentText, setCommentText] = useState<string>('');
   const [submittingComment, setSubmittingComment] = useState<boolean>(false);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  // Resolution Modal State
+  const [isResolveModalOpen, setIsResolveModalOpen] = useState<boolean>(false);
+  const [resolveReason, setResolveReason] = useState<string>('');
+  const [isResolving, setIsResolving] = useState<boolean>(false);
 
   const canModify = hasRole(['super_admin', 'engineer']);
 
@@ -72,19 +78,30 @@ export const IncidentDetailPage: React.FC = () => {
     }
   }, [fetchIncidentDetails, fetchAssignees, canModify]);
 
-  const handleStatusTransition = async (action: 'acknowledge' | 'investigate' | 'resolve' | 'reopen') => {
+  const handleStatusTransition = async (action: 'acknowledge' | 'investigate' | 'resolve' | 'reopen', reason?: string) => {
     if (!id) return;
     setActionError(null);
     try {
       let endpoint = `/incidents/${id}/${action}`;
-      if (action === 'resolve') {
-        const reason = prompt('Resolution summary / fix applied (optional):') || 'Issue mitigated';
+      if (action === 'resolve' && reason) {
         endpoint += `?reason=${encodeURIComponent(reason)}`;
       }
       await api.post(endpoint);
       await fetchIncidentDetails();
     } catch (err: any) {
       setActionError(err?.message || `Failed to ${action} incident`);
+    }
+  };
+
+  const handleConfirmResolve = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsResolving(true);
+    try {
+      await handleStatusTransition('resolve', resolveReason.trim() || 'Issue mitigated');
+      setIsResolveModalOpen(false);
+      setResolveReason('');
+    } finally {
+      setIsResolving(false);
     }
   };
 
@@ -123,11 +140,11 @@ export const IncidentDetailPage: React.FC = () => {
 
   if (!incident) {
     return (
-      <div className="p-8 text-center bg-navy-900 border border-slate-800 rounded-2xl">
-        <h3 className="text-base font-semibold text-white">Incident Not Found</h3>
+      <div className="p-8 text-center bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
+        <h3 className="text-base font-semibold text-slate-900 dark:text-white">Incident Not Found</h3>
         <button
           onClick={() => navigate('/incidents')}
-          className="mt-4 px-4 py-2 bg-brand-600 text-white rounded-lg text-xs"
+          className="mt-4 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold cursor-pointer transition shadow-sm"
         >
           Return to Incidents
         </button>
@@ -141,7 +158,7 @@ export const IncidentDetailPage: React.FC = () => {
       <div>
         <button
           onClick={() => navigate('/incidents')}
-          className="inline-flex items-center space-x-2 text-xs text-slate-400 hover:text-slate-200 transition cursor-pointer"
+          className="inline-flex items-center space-x-2 text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Incidents List</span>
@@ -149,28 +166,28 @@ export const IncidentDetailPage: React.FC = () => {
       </div>
 
       {actionError && (
-        <div className="p-3 bg-red-950/80 border border-red-800 rounded-xl text-red-300 text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+        <div className="p-3 bg-red-50 dark:bg-red-950/80 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-red-500 dark:text-red-400 shrink-0" />
           <span>{actionError}</span>
         </div>
       )}
 
       {/* Main Incident Banner */}
-      <div className="bg-navy-900 border border-charcoal-700 rounded-2xl p-6 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-charcoal-700 rounded-2xl p-6 shadow-sm transition-colors duration-150">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <SeverityBadge severity={incident.severity} size="md" />
               <StatusBadge status={incident.status} />
-              <span className="font-mono text-xs text-slate-400 bg-navy-950 px-2.5 py-1 rounded-md border border-slate-800">
+              <span className="font-mono text-xs text-slate-700 dark:text-slate-400 bg-slate-100 dark:bg-navy-950 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-800">
                 {incident.service_name} [{incident.environment}]
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
                 • {incident.event_count} telemetry events deduplicated
               </span>
             </div>
-            <h1 className="text-xl font-bold text-white tracking-tight">{incident.title}</h1>
-            <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">{incident.description}</p>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{incident.title}</h1>
+            <p className="text-xs text-slate-600 dark:text-slate-300 max-w-3xl leading-relaxed">{incident.description}</p>
           </div>
 
           {/* Action State Transition Buttons */}
@@ -179,7 +196,7 @@ export const IncidentDetailPage: React.FC = () => {
               {incident.status === 'OPEN' && (
                 <button
                   onClick={() => handleStatusTransition('acknowledge')}
-                  className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-sm"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Acknowledge</span>
@@ -189,7 +206,7 @@ export const IncidentDetailPage: React.FC = () => {
               {(incident.status === 'OPEN' || incident.status === 'ACKNOWLEDGED') && (
                 <button
                   onClick={() => handleStatusTransition('investigate')}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-sm"
                 >
                   <Play className="w-4 h-4" />
                   <span>Start Investigation</span>
@@ -198,8 +215,11 @@ export const IncidentDetailPage: React.FC = () => {
 
               {incident.status !== 'RESOLVED' && (
                 <button
-                  onClick={() => handleStatusTransition('resolve')}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                  onClick={() => {
+                    setResolveReason('');
+                    setIsResolveModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-sm"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Resolve Incident</span>
@@ -209,7 +229,7 @@ export const IncidentDetailPage: React.FC = () => {
               {incident.status === 'RESOLVED' && (
                 <button
                   onClick={() => handleStatusTransition('reopen')}
-                  className="px-4 py-2 bg-rose-700 hover:bg-rose-600 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-4 py-2 bg-rose-700 hover:bg-rose-600 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-sm"
                 >
                   <RotateCcw className="w-4 h-4" />
                   <span>Reopen Incident</span>
@@ -222,14 +242,14 @@ export const IncidentDetailPage: React.FC = () => {
         {/* Metadata stats bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-xs">
           <div>
-            <span className="text-slate-400 block mb-0.5">Assigned Engineer</span>
+            <span className="text-slate-500 dark:text-slate-400 block mb-0.5">Assigned Engineer</span>
             {canModify ? (
               <div className="space-y-1">
                 <select
                   value={incident.assigned_user_id || ''}
                   onChange={(e) => handleAssignUser(e.target.value)}
                   disabled={assigneesLoading}
-                  className="bg-navy-950 border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs w-full focus:outline-none focus:border-brand-500 disabled:opacity-50 cursor-pointer"
+                  className="bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded px-2 py-1 text-slate-800 dark:text-slate-200 text-xs w-full focus:outline-none focus:border-brand-500 disabled:opacity-50 cursor-pointer"
                 >
                   <option value="">Unassigned</option>
                   {assigneesLoading && <option disabled>Loading eligible engineers...</option>}
@@ -243,31 +263,31 @@ export const IncidentDetailPage: React.FC = () => {
                   ))}
                 </select>
                 {assigneesError && (
-                  <p className="text-[10px] text-rose-400 mt-0.5">{assigneesError}</p>
+                  <p className="text-[10px] text-rose-500 dark:text-rose-400 mt-0.5">{assigneesError}</p>
                 )}
               </div>
             ) : (
-              <span className="font-semibold text-slate-200">{incident.assigned_user_name || 'Unassigned'}</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">{incident.assigned_user_name || 'Unassigned'}</span>
             )}
           </div>
 
           <div>
-            <span className="text-slate-400 block mb-0.5">First Detected</span>
-            <span className="font-mono text-slate-200">
+            <span className="text-slate-500 dark:text-slate-400 block mb-0.5">First Detected</span>
+            <span className="font-mono text-slate-800 dark:text-slate-200">
               {new Date(incident.first_detected_at).toLocaleString()}
             </span>
           </div>
 
           <div>
-            <span className="text-slate-400 block mb-0.5">Last Recurrence</span>
-            <span className="font-mono text-slate-200">
+            <span className="text-slate-500 dark:text-slate-400 block mb-0.5">Last Recurrence</span>
+            <span className="font-mono text-slate-800 dark:text-slate-200">
               {new Date(incident.last_detected_at).toLocaleString()}
             </span>
           </div>
 
           <div>
-            <span className="text-slate-400 block mb-0.5">Deduplication Fingerprint</span>
-            <span className="font-mono text-[11px] text-slate-400 truncate block" title={incident.fingerprint}>
+            <span className="text-slate-500 dark:text-slate-400 block mb-0.5">Deduplication Fingerprint</span>
+            <span className="font-mono text-[11px] text-slate-600 dark:text-slate-400 truncate block" title={incident.fingerprint}>
               {incident.fingerprint.slice(0, 16)}...
             </span>
           </div>
@@ -278,35 +298,35 @@ export const IncidentDetailPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Related Triggering Logs (2 cols) */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-navy-900 border border-charcoal-700 rounded-2xl p-5 shadow-sm">
+          <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-charcoal-700 rounded-2xl p-5 shadow-sm transition-colors duration-150">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <Terminal className="w-4 h-4 text-brand-400" />
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Terminal className="w-4 h-4 text-brand-500 dark:text-brand-400" />
                   <span>Related Trigger Logs ({incident.related_logs?.length || 0})</span>
                 </h3>
-                <p className="text-xs text-slate-400">Captured telemetry events associated with this incident</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Captured telemetry events associated with this incident</p>
               </div>
             </div>
 
-            <div className="divide-y divide-slate-800 max-h-96 overflow-y-auto font-mono text-xs">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-96 overflow-y-auto font-mono text-xs">
               {(incident.related_logs || []).length === 0 ? (
                 <div className="py-6 text-center text-slate-400">No linked logs stored.</div>
               ) : (
                 (incident.related_logs || []).map((log, idx) => (
-                  <div key={idx} className="p-3 hover:bg-slate-800/40 transition">
+                  <div key={idx} className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                     <div className="flex items-center justify-between mb-1 text-[11px]">
                       <div className="flex items-center space-x-2">
                         <SeverityBadge severity={log.severity} size="sm" />
-                        <span className="text-slate-400">
+                        <span className="text-slate-500 dark:text-slate-400">
                           {new Date(log.timestamp).toLocaleTimeString()}
                         </span>
                       </div>
                       {log.trace_id && (
-                        <span className="text-brand-400 text-[10px]">trace: {log.trace_id}</span>
+                        <span className="text-brand-600 dark:text-brand-400 text-[10px]">trace: {log.trace_id}</span>
                       )}
                     </div>
-                    <div className="text-slate-200 font-sans text-xs mt-1 leading-relaxed">
+                    <div className="text-slate-800 dark:text-slate-200 font-sans text-xs mt-1 leading-relaxed">
                       {log.message}
                     </div>
                   </div>
@@ -319,18 +339,18 @@ export const IncidentDetailPage: React.FC = () => {
         {/* Right Column: Timeline & Comments (1 col) */}
         <div className="space-y-6">
           {/* Incident Timeline */}
-          <div className="bg-navy-900 border border-charcoal-700 rounded-2xl p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-brand-400" />
+          <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-charcoal-700 rounded-2xl p-5 shadow-sm transition-colors duration-150">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-brand-500 dark:text-brand-400" />
               <span>Incident Audit Timeline</span>
             </h3>
 
-            <div className="relative pl-6 space-y-4 border-l border-slate-800 text-xs">
+            <div className="relative pl-6 space-y-4 border-l border-slate-200 dark:border-slate-800 text-xs">
               {(incident.timeline || []).map((evt) => (
                 <div key={evt.id} className="relative">
-                  <span className="absolute -left-[29px] top-1 w-2.5 h-2.5 rounded-full bg-brand-500 ring-4 ring-navy-900" />
-                  <div className="font-semibold text-slate-200">{evt.event_type}</div>
-                  <div className="text-[11px] text-slate-400">by {evt.actor_name}</div>
+                  <span className="absolute -left-[29px] top-1 w-2.5 h-2.5 rounded-full bg-brand-500 ring-4 ring-white dark:ring-navy-900" />
+                  <div className="font-semibold text-slate-800 dark:text-slate-200">{evt.event_type}</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">by {evt.actor_name}</div>
                   <div className="text-[10px] text-slate-400 font-mono mt-0.5">
                     {new Date(evt.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </div>
@@ -340,9 +360,9 @@ export const IncidentDetailPage: React.FC = () => {
           </div>
 
           {/* Investigation Comments */}
-          <div className="bg-navy-900 border border-charcoal-700 rounded-2xl p-5 shadow-sm space-y-4">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-brand-400" />
+          <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-charcoal-700 rounded-2xl p-5 shadow-sm space-y-4 transition-colors duration-150">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-brand-500 dark:text-brand-400" />
               <span>Investigation Notes ({incident.comments?.length || 0})</span>
             </h3>
 
@@ -352,12 +372,12 @@ export const IncidentDetailPage: React.FC = () => {
                 <div className="text-xs text-slate-400 italic">No comments yet.</div>
               ) : (
                 incident.comments.map((c) => (
-                  <div key={c.id} className="p-3 bg-navy-950 rounded-xl border border-slate-800 text-xs">
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1">
-                      <span className="font-semibold text-slate-300">{c.user_name || 'Engineer'}</span>
+                  <div key={c.id} className="p-3 bg-slate-50 dark:bg-navy-950 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-1">
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">{c.user_name || 'Engineer'}</span>
                       <span>{new Date(c.created_at).toLocaleTimeString()}</span>
                     </div>
-                    <div className="text-slate-200 leading-relaxed">{c.comment}</div>
+                    <div className="text-slate-800 dark:text-slate-200 leading-relaxed">{c.comment}</div>
                   </div>
                 ))
               )}
@@ -365,13 +385,13 @@ export const IncidentDetailPage: React.FC = () => {
 
             {/* Add Comment Box */}
             {canModify && (
-              <form onSubmit={handlePostComment} className="space-y-2 pt-2 border-t border-slate-800">
+              <form onSubmit={handlePostComment} className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <textarea
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder="Add an investigation note, root cause hypothesis, or mitigation link..."
                   rows={2}
-                  className="w-full bg-navy-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 transition"
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 transition"
                 />
                 <button
                   type="submit"
@@ -386,6 +406,62 @@ export const IncidentDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Resolve Incident Dialog Modal */}
+      {isResolveModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-charcoal-700 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div className="flex items-center space-x-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Resolve Incident</h3>
+              </div>
+              <button
+                onClick={() => setIsResolveModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmResolve} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                  Resolution Summary / Fix Applied
+                </label>
+                <textarea
+                  rows={3}
+                  value={resolveReason}
+                  onChange={(e) => setResolveReason(e.target.value)}
+                  placeholder="e.g. Deployed bugfix to payment retry handler, downstream service recovered"
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-800 rounded-lg p-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500"
+                />
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                  This note will be recorded in the incident audit trail.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsResolveModalOpen(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg font-medium transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isResolving}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-semibold transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{isResolving ? 'Resolving...' : 'Confirm Resolution'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

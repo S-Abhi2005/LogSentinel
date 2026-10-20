@@ -10,17 +10,17 @@ export const SeverityBadge: React.FC<SeverityBadgeProps> = ({ severity, size = '
   const sev = (severity || '').toUpperCase();
 
   const styles: Record<string, string> = {
-    CRITICAL: 'bg-red-950/80 text-red-400 border border-red-800/80 shadow-[0_0_12px_rgba(239,68,68,0.25)]',
-    ERROR: 'bg-rose-950/70 text-rose-300 border border-rose-800/60',
-    HIGH: 'bg-red-950/80 text-red-400 border border-red-800/80',
-    WARNING: 'bg-amber-950/70 text-amber-300 border border-amber-700/60',
-    MEDIUM: 'bg-amber-950/70 text-amber-300 border border-amber-700/60',
-    INFO: 'bg-blue-950/70 text-blue-300 border border-blue-800/60',
-    LOW: 'bg-blue-950/70 text-blue-300 border border-blue-800/60',
-    DEBUG: 'bg-slate-900 text-slate-400 border border-slate-700',
+    CRITICAL: 'bg-red-100 text-red-700 border border-red-300 dark:bg-red-950/80 dark:text-red-400 dark:border-red-800/80',
+    ERROR: 'bg-rose-100 text-rose-700 border border-rose-300 dark:bg-rose-950/70 dark:text-rose-300 dark:border-rose-800/60',
+    HIGH: 'bg-red-100 text-red-700 border border-red-300 dark:bg-red-950/80 dark:text-red-400 dark:border-red-800/80',
+    WARNING: 'bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-700/60',
+    MEDIUM: 'bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-700/60',
+    INFO: 'bg-blue-100 text-blue-700 border border-blue-300 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800/60',
+    LOW: 'bg-blue-100 text-blue-700 border border-blue-300 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800/60',
+    DEBUG: 'bg-slate-100 text-slate-700 border border-slate-300 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700',
   };
 
-  const badgeStyle = styles[sev] || 'bg-slate-800 text-slate-300 border border-slate-700';
+  const badgeStyle = styles[sev] || 'bg-slate-100 text-slate-700 border border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
   const sizeClasses = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-xs font-semibold';
 
   return (

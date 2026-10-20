@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.user import User, UserRole
 from app.schemas.auth import (
-    LoginRequest, TokenResponse, UserCreate, UserUpdate, 
+    LoginRequest, TokenResponse, UserCreate, UserUpdate, UserProfileUpdate,
     ChangePasswordRequest, UserResponse, AssigneeResponse
 )
 from app.security.hashing import hash_password, verify_password
@@ -40,7 +40,7 @@ def login(data: LoginRequest, request: Request, db: Session = Depends(get_db)):
         raise UnauthorizedException("Account is deactivated. Contact an administrator.")
 
     token = create_access_token(subject=user.id, role=user.role)
-    
+
     log_audit_event(
         db=db,
         actor_email=user.email,
@@ -63,6 +63,33 @@ def login(data: LoginRequest, request: Request, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserResponse)
 def get_current_user_profile(current_user: User = Depends(get_current_user)):
+    return current_user
+
+@router.patch("/me", response_model=UserResponse)
+def update_current_user_profile(
+    data: UserProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Allows authenticated user to update their own profile information."""
+    cleaned_name = data.full_name.strip()
+    if len(cleaned_name) < 2:
+        raise BadRequestException("Full name must be at least 2 characters long")
+
+    current_user.full_name = cleaned_name
+    current_user.updated_at = datetime.now(timezone.utc)
+
+    log_audit_event(
+        db=db,
+        actor_email=current_user.email,
+        actor_role=current_user.role,
+        action="PROFILE_UPDATED",
+        target_type="user",
+        target_id=current_user.id,
+        details={"updated_name": cleaned_name}
+    )
+    db.commit()
+    db.refresh(current_user)
     return current_user
 
 @router.post("/logout")
@@ -94,10 +121,10 @@ def change_password(
 ):
     if not verify_password(data.current_password, current_user.hashed_password):
         raise BadRequestException("Current password does not match")
-    
+
     current_user.hashed_password = hash_password(data.new_password)
     current_user.updated_at = datetime.now(timezone.utc)
-    
+
     log_audit_event(
         db=db,
         actor_email=current_user.email,
@@ -139,7 +166,7 @@ def create_user(
     existing = db.query(User).filter(User.email == data.email.lower().strip()).first()
     if existing:
         raise ConflictException(f"User with email '{data.email}' already exists")
-    
+
     if data.role not in UserRole.ALL:
         raise BadRequestException(f"Invalid role. Allowed roles: {UserRole.ALL}")
 
@@ -187,7 +214,7 @@ def update_user(
         user.is_active = data.is_active
 
     user.updated_at = datetime.now(timezone.utc)
-    
+
     log_audit_event(
         db=db,
         actor_email=current_user.email,
